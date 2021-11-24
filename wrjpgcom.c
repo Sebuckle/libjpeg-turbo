@@ -433,7 +433,7 @@ main(int argc, char **argv)
       keep_COM = 0;
     } else if (keymatch(arg, "cfile", 2)) {
       if (++argn >= argc) usage();
-      if ((comment_file = fopen(argv[argn], "r")) == NULL) {
+      if ((fopen_s(&comment_file, argv[argn], "r")) != 0) {
         fprintf(stderr, "%s: can't open %s\n", progname, argv[argn]);
         exit(EXIT_FAILURE);
       }
@@ -452,7 +452,11 @@ main(int argc, char **argv)
                   (unsigned int)MAX_COM_LENGTH);
           exit(EXIT_FAILURE);
         }
-        strcpy(comment_arg, argv[argn] + 1);
+        if(strcpy_s(comment_arg, (size_t)MAX_COM_LENGTH, argv[argn] + 1) != 0)
+        {
+          fprintf(stderr, "Failed to copy comment text\n");
+          exit(EXIT_FAILURE);
+        }
         for (;;) {
           comment_length = (unsigned int)strlen(comment_arg);
           if (comment_length > 0 && comment_arg[comment_length - 1] == '"') {
@@ -467,8 +471,8 @@ main(int argc, char **argv)
                     (unsigned int)MAX_COM_LENGTH);
             exit(EXIT_FAILURE);
           }
-          strcat(comment_arg, " ");
-          strcat(comment_arg, argv[argn]);
+          strcat_s(comment_arg, (size_t)MAX_COM_LENGTH, " ");
+          strcat_s(comment_arg, (size_t)MAX_COM_LENGTH, argv[argn]);
         }
       } else if (strlen(argv[argn]) >= (size_t)MAX_COM_LENGTH) {
         fprintf(stderr, "Comment text may not exceed %u bytes\n",
@@ -491,7 +495,7 @@ main(int argc, char **argv)
 
   /* Open the input file. */
   if (argn < argc) {
-    if ((infile = fopen(argv[argn], READ_BINARY)) == NULL) {
+    if ((fopen_s(&infile, argv[argn], READ_BINARY)) != 0) {
       fprintf(stderr, "%s: can't open %s\n", progname, argv[argn]);
       exit(EXIT_FAILURE);
     }
@@ -517,7 +521,7 @@ main(int argc, char **argv)
     fprintf(stderr, "%s: must name one input and one output file\n", progname);
     usage();
   }
-  if ((outfile = fopen(argv[argn + 1], WRITE_BINARY)) == NULL) {
+  if ((fopen_s(&outfile, argv[argn + 1], WRITE_BINARY)) != 0) {
     fprintf(stderr, "%s: can't open %s\n", progname, argv[argn + 1]);
     exit(EXIT_FAILURE);
   }
