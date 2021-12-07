@@ -271,7 +271,9 @@ static void setCompDefaults(struct jpeg_compress_struct *cinfo,
                             int flags)
 {
 #ifndef NO_GETENV
-  char *env = NULL;
+  #define ENVBUF_SIZE 4
+  size_t requiredSize = 0;
+  char envBuf[ENVBUF_SIZE];
 #endif
 
   cinfo->in_color_space = pf2cs[pixelFormat];
@@ -279,17 +281,18 @@ static void setCompDefaults(struct jpeg_compress_struct *cinfo,
   jpeg_set_defaults(cinfo);
 
 #ifndef NO_GETENV
-  if ((env = getenv("TJ_OPTIMIZE")) != NULL && strlen(env) > 0 &&
-      !strcmp(env, "1"))
+  if (getenv_s(&requiredSize, envBuf, ENVBUF_SIZE, "TJ_OPTIMIZE") == 0 &&
+      requiredSize != 0 && requiredSize < ENVBUF_SIZE && !strcmp(envBuf, "1"))
     cinfo->optimize_coding = TRUE;
-  if ((env = getenv("TJ_ARITHMETIC")) != NULL && strlen(env) > 0 &&
-      !strcmp(env, "1"))
+  if (getenv_s(&requiredSize, envBuf, ENVBUF_SIZE, "TJ_ARITHMETIC") == 0 &&
+      requiredSize != 0 && requiredSize < ENVBUF_SIZE && !strcmp(envBuf, "1"))
     cinfo->arith_code = TRUE;
-  if ((env = getenv("TJ_RESTART")) != NULL && strlen(env) > 0) {
+  if (getenv_s(&requiredSize, envBuf, ENVBUF_SIZE, "TJ_RESTART") == 0 &&
+      requiredSize != 0 && requiredSize < ENVBUF_SIZE) {
     int temp = -1;
     char tempc = 0;
 
-    if (sscanf(env, "%d%c", &temp, &tempc) >= 1 && temp >= 0 &&
+    if (sscanf_s(envBuf, "%d%c", &temp, &tempc, 1) != EOF && temp >= 0 &&
         temp <= 65535) {
       if (toupper(tempc) == 'B') {
         cinfo->restart_interval = temp;
@@ -317,8 +320,8 @@ static void setCompDefaults(struct jpeg_compress_struct *cinfo,
   if (flags & TJFLAG_PROGRESSIVE)
     jpeg_simple_progression(cinfo);
 #ifndef NO_GETENV
-  else if ((env = getenv("TJ_PROGRESSIVE")) != NULL && strlen(env) > 0 &&
-           !strcmp(env, "1"))
+  else if (getenv_s(&requiredSize, envBuf, ENVBUF_SIZE, "TJ_PROGRESSIVE") == 0 &&
+           requiredSize != 0 && requiredSize < ENVBUF_SIZE && !strcmp(envBuf, "1"))
     jpeg_simple_progression(cinfo);
 #endif
 
@@ -2075,7 +2078,7 @@ DLLEXPORT unsigned char *tjLoadImage(const char *filename, int *width,
   this = (tjinstance *)handle;
   cinfo = &this->cinfo;
 
-  if ((file = fopen(filename, "rb")) == NULL)
+  if (fopen_s(&file, filename, "rb") != 0)
     THROW_UNIX("tjLoadImage(): Cannot open input file");
 
   if ((tempc = getc(file)) < 0 || ungetc(tempc, file) == EOF)
@@ -2171,7 +2174,7 @@ DLLEXPORT int tjSaveImage(const char *filename, unsigned char *buffer,
   this = (tjinstance *)handle;
   dinfo = &this->dinfo;
 
-  if ((file = fopen(filename, "wb")) == NULL)
+  if (fopen_s(&file, filename, "wb") != 0)
     THROW_UNIX("tjSaveImage(): Cannot open output file");
 
   if (setjmp(this->jerr.setjmp_buffer)) {

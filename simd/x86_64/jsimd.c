@@ -44,7 +44,9 @@ LOCAL(void)
 init_simd(void)
 {
 #ifndef NO_GETENV
-  char *env = NULL;
+  #define ENVBUF_SIZE 4
+  char env[ENVBUF_SIZE];
+  size_t requiredSize = 0;
 #endif
 
   if (simd_support != ~0U)
@@ -54,17 +56,17 @@ init_simd(void)
 
 #ifndef NO_GETENV
   /* Force different settings through environment variables */
-  env = getenv("JSIMD_FORCESSE2");
-  if ((env != NULL) && (strcmp(env, "1") == 0))
+  if ((getenv_s(&requiredSize, env, ENVBUF_SIZE, "JSIMD_FORCESSE2") == 0) &&
+       (requiredSize != 0) && (requiredSize < ENVBUF_SIZE) && (strcmp(env, "1") == 0))
     simd_support &= JSIMD_SSE2;
-  env = getenv("JSIMD_FORCEAVX2");
-  if ((env != NULL) && (strcmp(env, "1") == 0))
+  if ((getenv_s(&requiredSize, env, ENVBUF_SIZE, "JSIMD_FORCEAVX2") == 0) &&
+       (requiredSize != 0) && (requiredSize < ENVBUF_SIZE) && (strcmp(env, "1") == 0))
     simd_support &= JSIMD_AVX2;
-  env = getenv("JSIMD_FORCENONE");
-  if ((env != NULL) && (strcmp(env, "1") == 0))
+  if ((getenv_s(&requiredSize, env, ENVBUF_SIZE, "JSIMD_FORCENONE") == 0) &&
+       (requiredSize != 0) && (requiredSize < ENVBUF_SIZE) && (strcmp(env, "1") == 0))
     simd_support = 0;
-  env = getenv("JSIMD_NOHUFFENC");
-  if ((env != NULL) && (strcmp(env, "1") == 0))
+  if ((getenv_s(&requiredSize, env, ENVBUF_SIZE, "JSIMD_NOHUFFENC") == 0) &&
+       (requiredSize != 0) && (requiredSize < ENVBUF_SIZE) && (strcmp(env, "1") == 0))
     simd_huffman = 0;
 #endif
 }
